@@ -20,6 +20,7 @@ class cell:
         self.leftId = leftId
         self.upId = upId
         self.downId = downId
+        self.visited = False
 
     x = 0
     y = 0
@@ -28,6 +29,7 @@ class cell:
     leftId = 0
     upId = 0
     downId = 0
+    visited = False
 
 cells = []
 
@@ -41,13 +43,26 @@ def placeCell(size, x, y):
 
 
 def buildCells(gSize, cSize):
-    for i in range(gSize):
+    for x in range(gSize):
         for y in range(gSize):
-            cells.append(placeCell(cSize, cSize*i, cSize*y))
+            tempCell = placeCell(cSize, cSize * x, cSize * y)
+            tempCell.x = x
+            tempCell.y = y
+            cells.append(tempCell)
     return 0
 
+def hasUnvisted(cell):
+    return 0
 def genMaze():
+    stack = []
+    cells[0][0].visited = True
+    currCell = cells[0][0]
+    stack.append(cells[0][0])
 
+    while stack:
+        currCell = stack.pop()
+
+    return 0
 
 root = tk.Tk()
 
