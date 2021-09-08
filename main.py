@@ -1,5 +1,7 @@
 import tkinter as tk
 import os
+import random
+import time
 from tkinter import filedialog, Text
 
 eBlack = "#131515"
@@ -7,6 +9,8 @@ jet = "#2B2C28"
 albaster = "#E0E2DB"
 pGreen = "#2BA84A"
 oRed = "#FE5F55"
+
+borderColor = "white"
 
 cellSize = 32
 gridSize = 20
@@ -31,14 +35,14 @@ class cell:
     downId = 0
     visited = False
 
-cells = []
+cells = [[0 for i in range(gridSize)] for j in range(gridSize)]
 
 def placeCell(size, x, y):
     tCellId = mCanvas.create_rectangle(x, y, x+size, y+size, fill=oRed, width=0)
-    tRigthId = mCanvas.create_line(x+size, y, x+size, y + size, width=2)
-    tLeftId = mCanvas.create_line(x, y, x, y+size, width=2)
-    tUpId = mCanvas.create_line(x, y, x+size, y, width=2)
-    tDownId = mCanvas.create_line(x, y+size, x+size, y+size, width=2)
+    tRigthId = mCanvas.create_line(x+size, y, x+size, y + size, width=2, fill=borderColor)
+    tLeftId = mCanvas.create_line(x, y, x, y+size, width=2, fill=borderColor)
+    tUpId = mCanvas.create_line(x, y, x+size, y, width=2, fill=borderColor)
+    tDownId = mCanvas.create_line(x, y+size, x+size, y+size, width=2, fill=borderColor)
     return cell(x, y, tCellId, tRigthId, tLeftId, tUpId, tDownId)
 
 
@@ -48,19 +52,97 @@ def buildCells(gSize, cSize):
             tempCell = placeCell(cSize, cSize * x, cSize * y)
             tempCell.x = x
             tempCell.y = y
-            cells.append(tempCell)
+            cells[x][y] = tempCell
     return 0
 
 def hasUnvisted(cell):
+
+    uNeigh = []
+
+    r = True
+    l = True
+    u = True
+    d = True
+
+    if cell.y == 0:
+        u = False
+    if cell.y == gridSize-1:
+        d = False
+    if cell.x == 0:
+        l = False
+    if cell.x == gridSize - 1:
+        r = False
+
+    if r and not cells[cell.x+1][cell.y].visited:
+        uNeigh.append("r")
+    if l and not cells[cell.x-1][cell.y].visited:
+        uNeigh.append("l")
+    if u and not cells[cell.x][cell.y-1].visited:
+        uNeigh.append("u")
+    if d and not cells[cell.x][cell.y+1].visited:
+        uNeigh.append("d")
+
+    return uNeigh
+
+def removeWall(cellA, cellB):
+    if cellA.y == cellB.y:
+        if cellA.x > cellB.x:
+            mCanvas.delete(cellA.leftId)
+            mCanvas.delete(cellB.rightId)
+        else:
+            mCanvas.delete(cellA.rightId)
+            mCanvas.delete(cellB.leftId)
+    if cellA.x == cellB.x:
+        if cellA.y > cellB.y:
+            mCanvas.delete(cellA.upId)
+            mCanvas.delete(cellB.downId)
+        else:
+            mCanvas.delete(cellA.downId)
+            mCanvas.delete(cellB.upId)
+
+def flashCell(cell, color, duration):
+    prev = oRed
+    mCanvas.itemconfig(cell.cellId, fill=color)
+    mCanvas.update_idletasks()
+    time.sleep(duration)
+    mCanvas.itemconfig(cell.cellId, fill=prev)
+    mCanvas.update_idletasks()
     return 0
-def genMaze():
+
+def genMaze(cx, cy):
     stack = []
+
     cells[0][0].visited = True
+
     currCell = cells[0][0]
+
     stack.append(cells[0][0])
 
     while stack:
+        mCanvas.update_idletasks()
+        time.sleep(0.05)
+
         currCell = stack.pop()
+        neigh = hasUnvisted(currCell)
+        #print(currCell.x, currCell.y)
+        if neigh:
+            stack.append(cells[currCell.x][currCell.y])
+
+            side = random.choice(neigh)
+            targetCell = 0
+            if side == "r":
+                targetCell = cells[currCell.x + 1][currCell.y]
+            elif side == "l":
+                targetCell = cells[currCell.x - 1][currCell.y]
+            elif side == "u":
+                targetCell = cells[currCell.x][currCell.y - 1]
+            elif side == "d":
+                targetCell = cells[currCell.x][currCell.y + 1]
+            removeWall(currCell, targetCell)
+            cells[targetCell.x][targetCell.y].visited = True
+            stack.append(cells[targetCell.x][targetCell.y])
+        else:
+            flashCell(currCell, pGreen, 0.02)
 
     return 0
 
@@ -82,10 +164,10 @@ root.update()
 mCanvas = tk.Canvas(fMBack, bg=pGreen, highlightthickness=0, relief='ridge')
 mCanvas.place(width=cellSize*gridSize, height=cellSize*gridSize, x=(fMBack.winfo_width()-(cellSize*gridSize))/2, y=(fMBack.winfo_height()-(cellSize*gridSize))/2)
 
-# placeCell(cellSize, cellSize*0, cellSize*0)
-# placeCell(cellSize, cellSize*1, cellSize*0)
-# placeCell(cellSize, cellSize*5, cellSize*5)
+root.update()
 
 buildCells(gridSize, cellSize)
+
+genMaze(0, 0)
 
 root.mainloop()
