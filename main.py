@@ -2,6 +2,7 @@ import tkinter as tk
 import os
 import random
 import time
+import threading
 from tkinter import filedialog, Text
 
 eBlack = "#131515"
@@ -11,6 +12,7 @@ pGreen = "#2BA84A"
 oRed = "#FE5F55"
 
 borderColor = "white"
+cellColor = eBlack
 
 cellSize = 32
 gridSize = 20
@@ -38,7 +40,7 @@ class cell:
 cells = [[0 for i in range(gridSize)] for j in range(gridSize)]
 
 def placeCell(size, x, y):
-    tCellId = mCanvas.create_rectangle(x, y, x+size, y+size, fill=oRed, width=0)
+    tCellId = mCanvas.create_rectangle(x, y, x+size, y+size, fill=cellColor, width=0)
     tRigthId = mCanvas.create_line(x+size, y, x+size, y + size, width=2, fill=borderColor)
     tLeftId = mCanvas.create_line(x, y, x, y+size, width=2, fill=borderColor)
     tUpId = mCanvas.create_line(x, y, x+size, y, width=2, fill=borderColor)
@@ -101,7 +103,7 @@ def removeWall(cellA, cellB):
             mCanvas.delete(cellB.upId)
 
 def flashCell(cell, color, duration):
-    prev = oRed
+    prev = cellColor
     mCanvas.itemconfig(cell.cellId, fill=color)
     mCanvas.update_idletasks()
     time.sleep(duration)
@@ -110,6 +112,10 @@ def flashCell(cell, color, duration):
     return 0
 
 def genMaze(cx, cy):
+
+    mCanvas.delete(cells[0][0].leftId)
+    mCanvas.delete(cells[gridSize-1][gridSize-1].rightId)
+
     stack = []
 
     cells[0][0].visited = True
@@ -120,7 +126,7 @@ def genMaze(cx, cy):
 
     while stack:
         mCanvas.update_idletasks()
-        time.sleep(0.05)
+        time.sleep(0.001)
 
         currCell = stack.pop()
         neigh = hasUnvisted(currCell)
@@ -142,7 +148,7 @@ def genMaze(cx, cy):
             cells[targetCell.x][targetCell.y].visited = True
             stack.append(cells[targetCell.x][targetCell.y])
         else:
-            flashCell(currCell, pGreen, 0.02)
+            flashCell(currCell, pGreen, 0.015)
 
     return 0
 
@@ -168,6 +174,7 @@ root.update()
 
 buildCells(gridSize, cellSize)
 
-genMaze(0, 0)
+mazeThread = threading.Thread(target=genMaze, args=[0, 0])
+mazeThread.start()
 
 root.mainloop()
