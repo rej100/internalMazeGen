@@ -14,8 +14,12 @@ oRed = "#FE5F55"
 borderColor = "white"
 cellColor = eBlack
 
-cellSize = 32
-gridSize = 20
+cellSize = 8
+gridSize = 80
+
+
+# cellSize = 32
+# gridSize = 20
 
 class cell:
     def __init__(self, x, y, cellId, rightId, leftId, upId, downId):
@@ -111,7 +115,7 @@ def flashCell(cell, color, duration):
     mCanvas.update_idletasks()
     return 0
 
-def genMaze(cx, cy):
+def genMaze(cx, cy, anim):
 
     mCanvas.delete(cells[0][0].leftId)
     mCanvas.delete(cells[gridSize-1][gridSize-1].rightId)
@@ -126,7 +130,6 @@ def genMaze(cx, cy):
 
     while stack:
         mCanvas.update_idletasks()
-        time.sleep(0.001)
 
         currCell = stack.pop()
         neigh = hasUnvisted(currCell)
@@ -147,7 +150,9 @@ def genMaze(cx, cy):
             removeWall(currCell, targetCell)
             cells[targetCell.x][targetCell.y].visited = True
             stack.append(cells[targetCell.x][targetCell.y])
-        else:
+            if anim:
+                time.sleep(0.001)
+        elif anim:
             flashCell(currCell, pGreen, 0.015)
 
     return 0
@@ -174,7 +179,7 @@ root.update()
 
 buildCells(gridSize, cellSize)
 
-mazeThread = threading.Thread(target=genMaze, args=[0, 0])
+mazeThread = threading.Thread(target=genMaze, args=[0, 0, False])
 mazeThread.start()
 
 root.mainloop()
