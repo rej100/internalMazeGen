@@ -5,6 +5,8 @@ import time
 import threading
 from tkinter import filedialog, Text
 
+from PIL import Image
+
 eBlack = "#131515"
 jet = "#2B2C28"
 albaster = "#E0E2DB"
@@ -12,10 +14,10 @@ pGreen = "#2BA84A"
 oRed = "#FE5F55"
 
 borderColor = "white"
-cellColor = eBlack
+cellColor = oRed
 
-cellSize = 8
-gridSize = 80
+cellSize = 32
+gridSize = 20
 
 
 # cellSize = 32
@@ -53,6 +55,7 @@ def placeCell(size, x, y):
 
 
 def buildCells(gSize, cSize):
+    global cells
     for x in range(gSize):
         for y in range(gSize):
             tempCell = placeCell(cSize, cSize * x, cSize * y)
@@ -116,7 +119,7 @@ def flashCell(cell, color, duration):
     return 0
 
 def genMaze(cx, cy, anim):
-
+    global cells
     mCanvas.delete(cells[0][0].leftId)
     mCanvas.delete(cells[gridSize-1][gridSize-1].rightId)
 
@@ -129,7 +132,8 @@ def genMaze(cx, cy, anim):
     stack.append(cells[0][0])
 
     while stack:
-        mCanvas.update_idletasks()
+        if anim:
+            mCanvas.update_idletasks()
 
         currCell = stack.pop()
         neigh = hasUnvisted(currCell)
@@ -157,6 +161,32 @@ def genMaze(cx, cy, anim):
 
     return 0
 
+def saveImage():
+    print("clicked")
+    mCanvas.postscript(file="file_name.ps", colormode='color')
+    psimg = Image.open("file_name.ps")
+    psimg.save("file_name.png")
+    return 0
+
+def buttonGenMaze():
+    global cells
+    global gridSize
+    global cellSize
+
+    gridSize = int(sizeEntry.get())
+    factor = 20/gridSize
+    cellSize = 32*factor
+
+
+    cells = [[0 for i in range(gridSize)] for j in range(gridSize)]
+
+    print(sizeEntry.get())
+    buildCells(gridSize, cellSize)
+
+    mazeThread = threading.Thread(target=genMaze, args=[0, 0, False])
+    mazeThread.start()
+    return 0
+
 root = tk.Tk()
 
 canvas = tk.Canvas(root, width=1220, height=720 , bg=eBlack)
@@ -177,9 +207,21 @@ mCanvas.place(width=cellSize*gridSize, height=cellSize*gridSize, x=(fMBack.winfo
 
 root.update()
 
-buildCells(gridSize, cellSize)
+vertFrame1 = tk.Frame(fOptions, bg=jet)
+vertFrame1.pack()
 
-mazeThread = threading.Thread(target=genMaze, args=[0, 0, False])
-mazeThread.start()
+sizeLabel = tk.Label(vertFrame1, text="Maze size:")
+sizeLabel.pack(side="left")
+
+sizeEntry = tk.Entry(vertFrame1, width=3)
+sizeEntry.pack(side="left", padx=10)
+
+genMazeB = tk.Button(fOptions, text="Generate Maze", command=buttonGenMaze, padx=10, pady=10)
+genMazeB.pack(pady=10)
+
+saveMazeB = tk.Button(fOptions, text="Save Maze", command=saveImage, padx=10, pady=10)
+saveMazeB.pack(pady=10)
+
+root.update()
 
 root.mainloop()
