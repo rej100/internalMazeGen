@@ -4,6 +4,7 @@ import random
 import time
 import threading
 from tkinter import filedialog, Text
+from tkinter.colorchooser import askcolor
 
 from PIL import Image
 
@@ -15,10 +16,13 @@ oRed = "#FE5F55"
 
 borderColor = "white"
 cellColor = oRed
+entryColor = pGreen
+exitColor = "blue"
 
 cellSize = 32
 gridSize = 20
 
+defaultMazeSize = 10
 
 # cellSize = 32
 # gridSize = 20
@@ -53,9 +57,9 @@ def placeCell(size, x, y):
     tDownId = mCanvas.create_line(x, y+size, x+size, y+size, width=2, fill=borderColor)
     return cell(x, y, tCellId, tRigthId, tLeftId, tUpId, tDownId)
 
-
 def buildCells(gSize, cSize):
     global cells
+    #mCanvas.create_rectangle(0,0,gridSize*cellSize,gridSize*cellSize, fill=cellColor, width=0)
     for x in range(gSize):
         for y in range(gSize):
             tempCell = placeCell(cSize, cSize * x, cSize * y)
@@ -96,6 +100,22 @@ def hasUnvisted(cell):
 def removeWall(cellA, cellB):
     if cellA.y == cellB.y:
         if cellA.x > cellB.x:
+            mCanvas.itemconfig(cellA.leftId, fill=cellColor)
+            mCanvas.itemconfig(cellB.rightId, fill=cellColor)
+        else:
+            mCanvas.itemconfig(cellA.rightId, fill=cellColor)
+            mCanvas.itemconfig(cellB.leftId, fill=cellColor)
+    if cellA.x == cellB.x:
+        if cellA.y > cellB.y:
+            mCanvas.itemconfig(cellA.upId, fill=cellColor)
+            mCanvas.itemconfig(cellB.downId, fill=cellColor)
+        else:
+            mCanvas.itemconfig(cellA.downId, fill=cellColor)
+            mCanvas.itemconfig(cellB.upId, fill=cellColor)
+
+def removeWall2(cellA, cellB):
+    if cellA.y == cellB.y:
+        if cellA.x > cellB.x:
             mCanvas.delete(cellA.leftId)
             mCanvas.delete(cellB.rightId)
         else:
@@ -118,10 +138,15 @@ def flashCell(cell, color, duration):
     mCanvas.update_idletasks()
     return 0
 
+def setTerminals(entryCell, exitCell, entryc, exitc):
+    mCanvas.itemconfig(entryCell.leftId, fill=entryc, width=10)
+    mCanvas.itemconfig(exitCell.rightId, fill=exitc, width=10)
+    mCanvas.update_idletasks()
+
 def genMaze(cx, cy, anim):
     global cells
-    mCanvas.delete(cells[0][0].leftId)
-    mCanvas.delete(cells[gridSize-1][gridSize-1].rightId)
+    #mCanvas.delete(cells[0][0].leftId)
+    #mCanvas.delete(cells[gridSize-1][gridSize-1].rightId)
 
     stack = []
 
@@ -159,6 +184,8 @@ def genMaze(cx, cy, anim):
         elif anim:
             flashCell(currCell, pGreen, 0.015)
 
+    setTerminals(cells[0][0], cells[gridSize-1][gridSize-1], entryColor, exitColor)
+
     return 0
 
 def saveImage():
@@ -172,6 +199,9 @@ def buttonGenMaze():
     global cells
     global gridSize
     global cellSize
+    global mCanvas
+
+    mCanvas.delete("all")
 
     gridSize = int(sizeEntry.get())
     factor = 20/gridSize
@@ -185,6 +215,12 @@ def buttonGenMaze():
 
     mazeThread = threading.Thread(target=genMaze, args=[0, 0, True])
     mazeThread.start()
+    return 0
+
+def buttonChangeMazeColor():
+    global cellColor
+    cellColor = askcolor(color=cellColor, title="Choose maze color")[1]
+    mazeBackColorLabelS.config(bg=cellColor)
     return 0
 
 root = tk.Tk()
@@ -208,13 +244,26 @@ mCanvas.place(width=cellSize*gridSize, height=cellSize*gridSize, x=(fMBack.winfo
 root.update()
 
 vertFrame1 = tk.Frame(fOptions, bg=jet)
-vertFrame1.pack()
+vertFrame1.pack(pady=10)
 
 sizeLabel = tk.Label(vertFrame1, text="Maze size:")
 sizeLabel.pack(side="left")
 
 sizeEntry = tk.Entry(vertFrame1, width=3)
+sizeEntry.insert(0, defaultMazeSize)
 sizeEntry.pack(side="left", padx=10)
+
+vertFrame2 = tk.Frame(fOptions, bg=jet)
+vertFrame2.pack(pady=10)
+
+mazeBackColorLabel = tk.Label(vertFrame2, text="Maze color:")
+mazeBackColorLabel.pack(side="left")
+
+mazeBackColorLabelS = tk.Label(vertFrame2, text="", bg=cellColor)
+mazeBackColorLabelS.pack(side="left", padx=10)
+
+changeMazeColorB = tk.Button(vertFrame2, text="Change", command=buttonChangeMazeColor)
+changeMazeColorB.pack()
 
 genMazeB = tk.Button(fOptions, text="Generate Maze", command=buttonGenMaze, padx=10, pady=10)
 genMazeB.pack(pady=10)
