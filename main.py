@@ -19,6 +19,8 @@ cellColor = oRed
 entryColor = pGreen
 exitColor = "blue"
 
+vertFramePad = 5
+
 cellSize = 32
 gridSize = 20
 
@@ -213,7 +215,7 @@ def buttonGenMaze():
     print(sizeEntry.get())
     buildCells(gridSize, cellSize)
 
-    mazeThread = threading.Thread(target=genMaze, args=[0, 0, True])
+    mazeThread = threading.Thread(target=genMaze, args=[0, 0, False])
     mazeThread.start()
     return 0
 
@@ -221,6 +223,24 @@ def buttonChangeMazeColor():
     global cellColor
     cellColor = askcolor(color=cellColor, title="Choose maze color")[1]
     mazeBackColorLabelS.config(bg=cellColor)
+    return 0
+
+def buttonChangeWallColor():
+    global borderColor
+    borderColor = askcolor(color=borderColor, title="Choose wall color")[1]
+    mazeWallColorLabelS.config(bg=borderColor)
+    return 0
+
+def buttonChangeEntryColor():
+    global entryColor
+    entryColor = askcolor(color=entryColor, title="Choose wall color")[1]
+    mazeEntryColorLabelS.config(bg=entryColor)
+    return 0
+
+def buttonChangeExitColor():
+    global exitColor
+    exitColor = askcolor(color=exitColor, title="Choose exit color")[1]
+    mazeExitColorLabelS.config(bg=exitColor)
     return 0
 
 root = tk.Tk()
@@ -253,8 +273,9 @@ sizeEntry = tk.Entry(vertFrame1, width=3)
 sizeEntry.insert(0, defaultMazeSize)
 sizeEntry.pack(side="left", padx=10)
 
+#Maze background color change
 vertFrame2 = tk.Frame(fOptions, bg=jet)
-vertFrame2.pack(pady=10)
+vertFrame2.pack(pady=vertFramePad)
 
 mazeBackColorLabel = tk.Label(vertFrame2, text="Maze color:")
 mazeBackColorLabel.pack(side="left")
@@ -264,6 +285,45 @@ mazeBackColorLabelS.pack(side="left", padx=10)
 
 changeMazeColorB = tk.Button(vertFrame2, text="Change", command=buttonChangeMazeColor)
 changeMazeColorB.pack()
+
+#Maze wall color change
+vertFrame3 = tk.Frame(fOptions, bg=jet)
+vertFrame3.pack(pady=vertFramePad)
+
+mazeWallColorLabel = tk.Label(vertFrame3, text="Maze wall color:")
+mazeWallColorLabel.pack(side="left")
+
+mazeWallColorLabelS = tk.Label(vertFrame3, text="", bg=borderColor)
+mazeWallColorLabelS.pack(side="left", padx=10)
+
+changeWallColorB = tk.Button(vertFrame3, text="Change", command=buttonChangeWallColor)
+changeWallColorB.pack()
+
+#Maze entrance color change
+vertFrame4 = tk.Frame(fOptions, bg=jet)
+vertFrame4.pack(pady=vertFramePad)
+
+mazeEntryColorLabel = tk.Label(vertFrame4, text="Entrance color:")
+mazeEntryColorLabel.pack(side="left")
+
+mazeEntryColorLabelS = tk.Label(vertFrame4, text="", bg=entryColor)
+mazeEntryColorLabelS.pack(side="left", padx=10)
+
+changeEntryColorB = tk.Button(vertFrame4, text="Change", command=buttonChangeEntryColor)
+changeEntryColorB.pack()
+
+#Maze exit color change
+vertFrame5 = tk.Frame(fOptions, bg=jet)
+vertFrame5.pack(pady=vertFramePad)
+
+mazeExitColorLabel = tk.Label(vertFrame5, text="Exit color:")
+mazeExitColorLabel.pack(side="left")
+
+mazeExitColorLabelS = tk.Label(vertFrame5, text="", bg=entryColor)
+mazeExitColorLabelS.pack(side="left", padx=10)
+
+changeExitColorB = tk.Button(vertFrame5, text="Change", command=buttonChangeExitColor)
+changeExitColorB.pack()
 
 genMazeB = tk.Button(fOptions, text="Generate Maze", command=buttonGenMaze, padx=10, pady=10)
 genMazeB.pack(pady=10)
