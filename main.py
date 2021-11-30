@@ -1,4 +1,5 @@
 import tkinter as tk
+import copy
 import os
 import random
 import time
@@ -34,30 +35,25 @@ gOptions = {
 }
 
 # class pOptions:
-#     def __init__(self, name, borderColor, cellColor, entryColor, exitColor, defaultMazeSize, gAnimate):
+#     def __init__(self, name, options):
 #         self.name = name
-#         self.borderColor = borderColor
-#         self.cellColor = cellColor
-#         self.entryColor = entryColor
-#         self.exitColor = exitColor
-#         self.defaultMazeSize = defaultMazeSize
-#         self.gAnimate = gAnimate
+#         self.options = options
 #
-#     name="defn"
-#     borderColor = "white"
-#     cellColor = oRed
-#     entryColor = pGreen
-#     exitColor = "blue"
-#     defaultMazeSize = 10
-#     gAnimate = False
+#     name = "defn"
+#     options = copy.deepcopy(gOptions)
+#
+#     def toJSON(self):
+#         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
-class pOptions:
+class pOptions(dict):
     def __init__(self, name, options):
-        self.name = name
-        self.options = options
+        dict.__init__(self, name=name, options=options)
 
-    name = "defn"
-    options = gOptions
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+test = pOptions("xd", gOptions)
 
 gPresets = []
 
@@ -343,6 +339,8 @@ def buttonResetDefaults():
 
 def updatePresetList():
 
+    updatePresetsFile()
+
     for widget in pListFrame.winfo_children():
         widget.destroy()
 
@@ -373,10 +371,9 @@ def loadPreset(name):
     count = 0
     for i in gPresets:
         if i.name == name:
-            gOptions = gPresets[count].options
+            gOptions = copy.deepcopy(gPresets[count].options)
             break
         count += 1
-    updatePresetList()
     updateConfiguration()
 
 def savePreset():
@@ -389,17 +386,20 @@ def savePreset():
     if killSwitch:
         return
 
-    gPresets.append(pOptions(presetNameEntry.get(), gOptions))
+    gPresets.append( pOptions(presetNameEntry.get(), copy.deepcopy(gOptions)) )
 
     updatePresetList()
 
 def openPresetsW():
+    global gPresets
     global presetNameEntry
     global pListFrame
 
+    loadPresetsFile()
+
     #Presets window creation
     presetsW = tk.Toplevel()
-    presetsW.title("Presets")
+    presetsW.title("Presets editor")
 
     #Background frame creation
     pBackFrame = tk.Frame(presetsW, width=377, height=720, bg=albaster)
@@ -434,6 +434,31 @@ def updateConfiguration():
     mazeEntryColorLabelS.config(bg=gOptions["entryColor"])
     mazeExitColorLabelS.config(bg=gOptions["exitColor"])
     animatecvar.set(int(gOptions["gAnimate"]))
+
+def loadPresetsFile():
+    global gPresets
+
+    if not os.path.exists("./presets.json"):
+        return False
+    else:
+        presetsFile = open("presets.json")
+        tempPresets = json.load(presetsFile)
+        presetsFile.close()
+
+        gPresets = []
+        for i in tempPresets:
+            gPresets.append(pOptions(i["name"], i["options"]))
+
+        print(gPresets)
+
+# def loadPresetsFile():
+#     print(gPresets)
+
+
+def updatePresetsFile():
+    presetsFile = open("presets.json", "w")
+    json.dump(gPresets, presetsFile)
+    presetsFile.close()
 
 #Load options
 loadDefaults()
